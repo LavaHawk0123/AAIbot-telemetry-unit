@@ -13,13 +13,14 @@ from PyQt5.QtCore import*
 import datetime
 import pickle
 import numpy as np
+import json
 from data_packet import PacketFunctions,dataPacket
 
 class Ui_MainWindow(object):
 
     def declare_vars(self):
         self.L = []
-        self.msg = ""
+        self.msg = {}
         # Variable Declerations
         host = socket.gethostname()
         self.IP = socket.gethostbyname(host)
@@ -403,43 +404,51 @@ class Ui_MainWindow(object):
         self.th_setLabelValues.start()
         self.set_values_th.start()
         self.setAngleLabels()
-
+    
     def getDataFromSocket(self):
         self.s1.connect((self.IP_add, self.port3))
         while True:
-            #print("Waiting for Data")
             time.sleep(2)
             self.msg = self.s1.recv(1024).decode()
             print("\nRecieved Message"+ self.msg)
-            self.L = self.msg.split(",")
-            print(self.L)
-            self.imu_roll = np.double(self.L[0])
-            self.imu_pitch = np.double(self.L[1])
-            self.imu_yaw = np.double(self.L[2])
-            self.packets_sent = np.double(self.L[3])
-            self.packets_recv = np.double(self.L[4])
-            self.ping = np.double(self.L[5])
-            self.signal_strength = np.double(self.L[6])
-            self.imu_quat_x = np.double(self.L[7])
-            self.imu_quat_y = np.double(self.L[8])
-            self.imu_quat_z = np.double(self.L[9])
-            self.imu_quat_w = np.double(self.L[10])
-            self.gps_latitude = np.double(self.L[11])
-            self.gps_longitude = np.double(self.L[12])
-            print("Roll : "+str(self.imu_roll))
-            print("Pitch : "+str(self.imu_pitch))
-            print("Yaw : "+str(self.imu_yaw))
-            print("Packets Sent : "+str(self.packets_sent))
-            print("Packets Recv : "+str(self.packets_recv))
-            print("Ping : "+str(self.ping))
-            print("Signal Strength : "+str(self.signal_strength))
-            print("Quat X : "+str(self.imu_quat_x))
-            print("Quat Y : "+str(self.imu_quat_y))
-            print("Quat Z : "+str(self.imu_quat_z))
-            print("Quat W : "+str(self.imu_quat_w))
-            print("Latitude : "+str(self.gps_latitude))
-            print("Longitude : "+str(self.gps_longitude))
+            msg_dict = json.loads(self.msg)
+            self.L = msg_dict['data'].split(",")
+            self.assignClassVariableValues()
+            self.printIncomingData()
 
+
+    def printIncomingData(self):
+        print("Telemetry Data Log : ")
+        print("Roll : "+str(self.imu_roll))
+        print("Pitch : "+str(self.imu_pitch))
+        print("Yaw : "+str(self.imu_yaw))
+        print("Packets Sent : "+str(self.packets_sent))
+        print("Packets Recv : "+str(self.packets_recv))
+        print("Ping : "+str(self.ping))
+        print("Signal Strength : "+str(self.signal_strength))
+        print("Quat X : "+str(self.imu_quat_x))
+        print("Quat Y : "+str(self.imu_quat_y))
+        print("Quat Z : "+str(self.imu_quat_z))
+        print("Quat W : "+str(self.imu_quat_w))
+        print("Latitude : "+str(self.gps_latitude))
+        print("Longitude : "+str(self.gps_longitude))
+
+    def assignClassVariableValues(self):
+        self.imu_roll = np.double(self.L[0])
+        self.imu_pitch = np.double(self.L[1])
+        self.imu_yaw = np.double(self.L[2])
+        self.packets_sent = np.double(self.L[3])
+        self.packets_recv = np.double(self.L[4])
+        self.ping = np.double(self.L[5])
+        self.signal_strength = np.double(self.L[6])
+        self.imu_quat_x = np.double(self.L[7])
+        self.imu_quat_y = np.double(self.L[8])
+        self.imu_quat_z = np.double(self.L[9])
+        self.imu_quat_w = np.double(self.L[10])
+        self.gps_latitude = np.double(self.L[11])
+        self.gps_longitude = np.double(self.L[12])
+
+        
     def getCameraImage(self):
         cap = cv2.VideoCapture(0)
         while True:
@@ -474,14 +483,7 @@ class Ui_MainWindow(object):
             self.imuOrientation_z.setText(_translate("MainWindow", str(self.imu_quat_z)))
             self.imuOrientation_w.setText(_translate("MainWindow", str(self.imu_quat_w)))
             self.gpsLong_value.setText(_translate("MainWindow", str(self.gps_latitude)))
-            self.gpsLat_val.setText(_translate("MainWindow", str(self.gps_longitude)))
-
-
-
-
-
-
-    
+            self.gpsLat_val.setText(_translate("MainWindow", str(self.gps_longitude)))    
 
 def create_GUI():
     app = QtWidgets.QApplication(sys.argv)

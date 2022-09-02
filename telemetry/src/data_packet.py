@@ -3,12 +3,13 @@ import sys
 from datetime import datetime
 
 class dataPacket:
-    def __init__(self,ip,port):
+    def __init__(self,sourceip,sourceport,destip,destport):
     
     # Data section of the Packet
         
         # {data} Contains the data to be sent to the base station
         self.data = ""
+        self.data_dict = {}
 
     # Header of the data packet has been defined
 
@@ -16,12 +17,17 @@ class dataPacket:
         # Default - Contains the time the connection was initiated
         self.time = datetime.now().strftime("%m/%d/%Y, %H:%M:%S")
 
+        # {source_ip} - Contains the destination IP address to the header
+        self.source_ip = sourceip
+
+        # {source_port} - Contains the port the packet has to be sent to
+        self.source_port = sourceport
 
         # {dest_ip} - Contains the destination IP address to the header
-        self.dest_ip = ip
+        self.dest_ip = destip
 
         # {dest_port} - Contains the port the packet has to be sent to
-        self.dest_port = port
+        self.dest_port = destport
 
         # {checksum} - Check value for data integrity check
         self.checksum = self.initCheckSum()
@@ -41,10 +47,15 @@ class dataPacket:
 
     # Driver Functions to enhance access and control
 
-    # Function to configure details of the ip and port no
-    def setSourceDetails(self,ip,port):
+    # Function to configure details of the destination ip and port no
+    def setDestDetails(self,ip,port):
         self.dest_ip = ip
         self.dest_port = port
+
+    # Function to configure details of the source ip and port no
+    def setSourceDetails(self,ip,port):
+        self.source_ip = ip
+        self.source_port = port
 
     # Function to return a str object of the class details
     def getParams(self):
@@ -63,6 +74,13 @@ class dataPacket:
     # Function to assign data to the data segment 
     def assignData(self,data):
         self.data = data
+
+    # Function to assign packet size {In case it is variable}
+    def assignPacketSize(self,packet):
+        self.packet_size = sys.getsizeof(packet)
+    
+    def serializeDataSection(self,packet):
+        self.data_dict = packet.data.__dict__
 
 
 # Class to provide Client and Server side programs access and functionality to data packets

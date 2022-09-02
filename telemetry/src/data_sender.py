@@ -61,10 +61,11 @@ class Connect_Socket:
             time.sleep(5)
 
     def createDataPacket(self,data,seq_num):
-        packet = dataPacket(self.IP_add_c1,self.port3)
+        packet = dataPacket(self.IP_add_c1,self.port3,self.IP_add_c1,self.port3)
         packet.assignData(data)
         packet.assignSeqNum(seq_num)
         packet.initCheckSum()
+        packet.assignPacketSize(packet)
         return packet
 
     
