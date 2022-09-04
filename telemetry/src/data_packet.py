@@ -1,6 +1,71 @@
+
+
+"""
+Maintainer - Aditya Arun Iyer
+Last Modified - 02/09/2022 13:06 PM
+
+The below driver code contains the class defenition for the data packet
+
+Run Location : N/A
+
+"""
+
 import json
 import sys
 from datetime import datetime
+import numpy as np
+
+class telemetryDataStructure:
+    def __init__(self):
+        self.L = []
+        self.imu_roll = 0.0
+        self.imu_pitch = 0.0
+        self.imu_yaw = 0.0
+        self.packets_sent = 0
+        self.packets_recv = 0
+        self.ping = 0.00
+        self.signal_strength = 0.0
+        self.imu_quat_x = 0.0000
+        self.imu_quat_y = 0.0000
+        self.imu_quat_z = 0.0000
+        self.imu_quat_w = 0.0000
+        self.gps_latitude = 0.000000
+        self.gps_longitude = 0.000000
+
+    def assignValuefromList(self,L):
+        self.L = L
+        self.assignClassVariableValues()
+
+    def assignClassVariableValues(self):
+        self.imu_roll = np.double(self.L[0])
+        self.imu_pitch = np.double(self.L[1])
+        self.imu_yaw = np.double(self.L[2])
+        self.packets_sent = np.double(self.L[3])
+        self.packets_recv = np.double(self.L[4])
+        self.ping = np.double(self.L[5])
+        self.signal_strength = np.double(self.L[6])
+        self.imu_quat_x = "IMU Orientation_x: "+str(np.double(self.L[7]))
+        self.imu_quat_y = "IMU Orientation_y: "+str(np.double(self.L[8]))
+        self.imu_quat_z = "IMU Orientation_z: "+str(np.double(self.L[9]))
+        self.imu_quat_w = "IMU Orientation_w: "+str(np.double(self.L[10]))
+        self.gps_latitude = "Latitude: "+str(np.double(self.L[11]))
+        self.gps_longitude = "Longitude: "+str(np.double(self.L[12]))
+    
+    def printDataLog(self):
+        print("Telemetry Data Log : ")
+        print("Roll : "+str(self.imu_roll))
+        print("Pitch : "+str(self.imu_pitch))
+        print("Yaw : "+str(self.imu_yaw))
+        print("Packets Sent : "+str(self.packets_sent))
+        print("Packets Recv : "+str(self.packets_recv))
+        print("Ping : "+str(self.ping))
+        print("Signal Strength : "+str(self.signal_strength))
+        print("Quat X : "+str(self.imu_quat_x))
+        print("Quat Y : "+str(self.imu_quat_y))
+        print("Quat Z : "+str(self.imu_quat_z))
+        print("Quat W : "+str(self.imu_quat_w))
+        print("Latitude : "+str(self.gps_latitude))
+        print("Longitude : "+str(self.gps_longitude))
 
 class dataPacket:
     def __init__(self,sourceip,sourceport,destip,destport):

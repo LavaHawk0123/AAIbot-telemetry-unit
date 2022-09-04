@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 import sys
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtCore import Qt, pyqtSlot
@@ -14,7 +15,7 @@ import datetime
 import pickle
 import numpy as np
 import json
-from data_packet import PacketFunctions,dataPacket
+from data_packet import PacketFunctions,dataPacket,telemetryDataStructure
 
 class Ui_MainWindow(object):
 
@@ -413,8 +414,11 @@ class Ui_MainWindow(object):
             print("\nRecieved Message"+ self.msg)
             msg_dict = json.loads(self.msg)
             self.L = msg_dict['data'].split(",")
+            telemData = telemetryDataStructure()
+            telemData.assignValuefromList(self.L)
+            telemData.printDataLog()
             self.assignClassVariableValues()
-            self.printIncomingData()
+            #self.printIncomingData()
 
 
     def printIncomingData(self):
@@ -441,14 +445,14 @@ class Ui_MainWindow(object):
         self.packets_recv = np.double(self.L[4])
         self.ping = np.double(self.L[5])
         self.signal_strength = np.double(self.L[6])
-        self.imu_quat_x = np.double(self.L[7])
-        self.imu_quat_y = np.double(self.L[8])
-        self.imu_quat_z = np.double(self.L[9])
-        self.imu_quat_w = np.double(self.L[10])
-        self.gps_latitude = np.double(self.L[11])
-        self.gps_longitude = np.double(self.L[12])
+        self.imu_quat_x = "IMU Orientation_x: "+str(np.double(self.L[7]))
+        self.imu_quat_y = "IMU Orientation_y: "+str(np.double(self.L[8]))
+        self.imu_quat_z = "IMU Orientation_z: "+str(np.double(self.L[9]))
+        self.imu_quat_w = "IMU Orientation_w: "+str(np.double(self.L[10]))
+        self.gps_latitude = "Latitude: "+str(np.double(self.L[11]))
+        self.gps_longitude = "Longitude: "+str(np.double(self.L[12]))
 
-        
+
     def getCameraImage(self):
         cap = cv2.VideoCapture(0)
         while True:

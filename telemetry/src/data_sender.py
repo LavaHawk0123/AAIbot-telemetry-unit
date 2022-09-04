@@ -1,5 +1,15 @@
 #!/usr/bin/env python3
 
+"""
+Maintainer - Aditya Arun Iyer
+Last Modified - 02/09/2022 13:06 PM
+
+The below driver code compiles the sensor and telemetry values into a single serial parameter(str) and sends
+it to the base station using a TCP socket connection
+
+Run Location : Remote Server
+"""
+
 import socket
 import time
 import rospy
@@ -36,10 +46,10 @@ class Connect_Socket:
         self.s3 = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         
         # Thread declerations
-        self.th_Testbench = threading.Thread(target=self.Testbench)
+        self.th_DataCollection = threading.Thread(target=self.CollectDataFromServer)
         self.th_send_params = threading.Thread(target=self.send_params)
     
-    def Testbench(self):
+    def CollectDataFromServer(self):
         while not rospy.is_shutdown():
             time.sleep(1)
             self.imu_roll = rospy.get_param("/IMU/Roll")
@@ -67,8 +77,7 @@ class Connect_Socket:
         packet.initCheckSum()
         packet.assignPacketSize(packet)
         return packet
-
-    
+  
     def send_params(self):
 
         # binding port and host
@@ -92,7 +101,7 @@ class Connect_Socket:
 
 
     def driver(self):
-        self.th_Testbench.start()
+        self.th_DataCollection.start()
         time.sleep(3)
         self.th_send_params.start()
 
