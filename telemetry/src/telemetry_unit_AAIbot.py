@@ -53,6 +53,7 @@ class Ui_MainWindow(object):
 
         self.arrow_img = cv2.imread("/home/neo/AAIBot_ws/src/telemetry/images/arrow_ss.png")
         self.map_img = cv2.imread("/home/neo/AAIBot_ws/src/telemetry/images/Map_Screenshot.png")
+        self.logo_img = cv2.imread("/home/neo/AAIBot_ws/src/telemetry/images/mahe_logo.jpeg")
 
 
         # Socket Declerations
@@ -330,6 +331,8 @@ class Ui_MainWindow(object):
         MainWindow.setStatusBar(self.statusbar)
 
         self.retranslateUi(MainWindow)
+        self.qt_img_logo = self.convert_cv_qt(self.logo_img, 91, 71)
+        self.logo_label.setPixmap(self.qt_img_logo)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
     def retranslateUi(self, MainWindow):
@@ -342,14 +345,14 @@ class Ui_MainWindow(object):
             self.pitch_label.setText(_translate("MainWindow", "Pitch Angle"))
             self.roll_label.setText(_translate("MainWindow", "Roll Angle"))
             self.yaw_label.setText(_translate("MainWindow", "Yaw Angle"))
-            self.trans_lbl4.setText(_translate("MainWindow", "lv4"))
-            self.trans_lbl3.setText(_translate("MainWindow", "lv3"))
-            self.trans_lbl2.setText(_translate("MainWindow", "lv2"))
-            self.trans_lbl1.setText(_translate("MainWindow", "lv1"))
-            self.recv_lbl2.setText(_translate("MainWindow", "lv2"))
-            self.recv_lbl1.setText(_translate("MainWindow", "lv1"))
-            self.recv_lbl3.setText(_translate("MainWindow", "lv3"))
-            self.recv_lbl4.setText(_translate("MainWindow", "lv4"))
+            self.trans_lbl4.setText(_translate("MainWindow", ""))
+            self.trans_lbl3.setText(_translate("MainWindow", ""))
+            self.trans_lbl2.setText(_translate("MainWindow", ""))
+            self.trans_lbl1.setText(_translate("MainWindow", ""))
+            self.recv_lbl2.setText(_translate("MainWindow", ""))
+            self.recv_lbl1.setText(_translate("MainWindow", ""))
+            self.recv_lbl3.setText(_translate("MainWindow", ""))
+            self.recv_lbl4.setText(_translate("MainWindow", ""))
             self.transmit_label.setText(_translate("MainWindow", "Transmit"))
             self.recv_label.setText(_translate("MainWindow", "Recieve"))
             self.packetSent_heading.setText(_translate("MainWindow", "Packets Sent : "))
@@ -415,12 +418,11 @@ class Ui_MainWindow(object):
         self.set_values_th.start()
 
     def addItemToList(self):
-        self.listItem = str(self.gps_latitude) +"\t\t"+ str(self.gps_longitude)
+        self.listItem = str(np.double(self.L[11])) +"\t\t"+ str(np.double(self.L[12]))
         self.waypoints_list.addItem(self.listItem)
 
     def startListThread(self):
         self.addItemToList()
-
 
     def getDataFromPipeline(self):
         self.th_setLabelValues.start()
@@ -526,17 +528,16 @@ class Ui_MainWindow(object):
 
     def setSignalLabels(self):
         transLabelList = [self.trans_lbl1,self.trans_lbl2,self.trans_lbl3,self.trans_lbl4]
-        recvLabelList = [self.trans_lbl1,self.trans_lbl2,self.trans_lbl3,self.trans_lbl4]
+        recvLabelList = [self.recv_lbl1,self.recv_lbl2,self.recv_lbl3,self.recv_lbl4]
         while True:
-            n_send = random.randint(0,5)
-            n_recv = random.randint(0,5)
+            n_send = random.randint(0,3)
+            n_recv = random.randint(0,3)
             for i in range(1,n_send):
-                n_send = random.randint(0,5)
-
+                time.sleep(0.1)
                 transLabelList[i].setText("")
                 transLabelList[i].setStyleSheet("background-color: green")
             for i in range(1,n_recv):
-                n_recv = random.randint(0,5)
+                time.sleep(0.1)
                 recvLabelList[i].setText("")
                 recvLabelList[i].setStyleSheet("background-color: green")
 

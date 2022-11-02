@@ -19,6 +19,8 @@ while True:
 		rospy.set_param("/IMU/Quat/w",i)
 		rospy.set_param("/GPS/latitude",i)
 		rospy.set_param("/GPS/longitude",i)
+		i = i+1.35
+		time.sleep(0.1)
 	except KeyboardInterrupt:
 		sys.exit(0)
 	time.sleep(0.1)

@@ -1,0 +1,4 @@
+<launch>
+  <node name="param_testbench" pkg="telemetry" type="test_param_load.py" output="screen"/>
+  <node name="send_data_to_gui" pkg="telemetry" type="data_sender.py" output="screen"/>
+</launch>

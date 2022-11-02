@@ -1,0 +1,4 @@
+<launch>
+  <node name="create_comb_msg" pkg="telemetry" type="data_sender.py" output="screen"/>
+  <node name="send_img" pkg="telemetry" type="data_sender.py" output="screen"/>
+</launch>
