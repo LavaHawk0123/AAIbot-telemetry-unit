@@ -13,6 +13,10 @@ from PyQt5.QtWidgets import*
 from PyQt5.QtCore import*
 import datetime
 import pickle
+import random
+import numpy as np
+import struct 
+import zlib
 import numpy as np
 import json
 from data_packet import PacketFunctions,dataPacket,telemetryDataStructure
@@ -28,7 +32,7 @@ class Ui_MainWindow(object):
         self.IP_add = "127.0.0.1"
         self.IP_add_c2 = "172.20.10.4"
         self.IP_add_c1 = "192.168.1.101"
-        self.port1 = 502
+        self.port1 = 9928
         self.port2 = 9047
         self.port3 = 9058
         self.port4 = 12345
@@ -45,8 +49,11 @@ class Ui_MainWindow(object):
         self.imu_quat_w = 0.0000
         self.gps_latitude = 0.000000
         self.gps_longitude = 0.000000
+        self.msg_dict = {}
 
-        self.arrow_img = cv2.imread("../images/arrow_ss.png")
+        self.arrow_img = cv2.imread("/home/neo/AAIBot_ws/src/telemetry/images/arrow_ss.png")
+        self.map_img = cv2.imread("/home/neo/AAIBot_ws/src/telemetry/images/Map_Screenshot.png")
+
 
         # Socket Declerations
         self.s1 = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -54,9 +61,11 @@ class Ui_MainWindow(object):
         self.s3 = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
         # Thread declerations
-        self.th_setCameraImageLabel = threading.Thread(target=self.getCameraImage)
+        self.th_setCameraImageLabel = threading.Thread(target=self.getCameraUDP)
         self.th_setLabelValues = threading.Thread(target=self.getDataFromSocket)
         self.set_values_th = threading.Thread(target=self.set_values)
+        self.addCoordinateThread = threading.Thread(target = self.addItemToList)
+        self.signalStrengthThread = threading.Thread(target = self.setSignalLabels)
 
 
     def createGuiElements(self, MainWindow):
@@ -296,8 +305,10 @@ class Ui_MainWindow(object):
         self.tmrReset_btn.setGeometry(QtCore.QRect(1090, 180, 89, 25))
         self.tmrReset_btn.setObjectName("tmrReset_btn")
 
-        self.waypoints_list = QtWidgets.QListView(self.centralwidget)
+        self.waypoints_list = QtWidgets.QListWidget(self.centralwidget)
         self.waypoints_list.setGeometry(QtCore.QRect(1200, 111, 351, 111))
+        self.listItem = "latitude" +"\t\t"+ "longitude"
+        self.waypoints_list.addItem(self.listItem)
         self.waypoints_list.setObjectName("waypoints_list")
 
         self.watpoints_heading = QtWidgets.QLabel(self.centralwidget)
@@ -394,6 +405,8 @@ class Ui_MainWindow(object):
         self.close_btn.clicked.connect(self.exit_gui)
         self.showImage_btn.clicked.connect(self.Display_Image)
         self.connect_btn.clicked.connect(self.getDataFromPipeline)
+        self.showMap_btn.clicked.connect(self.getDataFromPipeline)
+        self.saveCoordinate_btn.clicked.connect(self.startListThread)
     
     def Display_Image(self):
         self.th_setCameraImageLabel.start()
@@ -401,10 +414,19 @@ class Ui_MainWindow(object):
     def setLabelValues(self):
         self.set_values_th.start()
 
+    def addItemToList(self):
+        self.listItem = str(self.gps_latitude) +"\t\t"+ str(self.gps_longitude)
+        self.waypoints_list.addItem(self.listItem)
+
+    def startListThread(self):
+        self.addItemToList()
+
+
     def getDataFromPipeline(self):
         self.th_setLabelValues.start()
         self.set_values_th.start()
         self.setAngleLabels()
+        self.signalStrengthThread.start()
     
     def getDataFromSocket(self):
         self.s1.connect((self.IP_add, self.port3))
@@ -412,13 +434,12 @@ class Ui_MainWindow(object):
             time.sleep(2)
             self.msg = self.s1.recv(1024).decode()
             print("\nRecieved Message"+ self.msg)
-            msg_dict = json.loads(self.msg)
-            self.L = msg_dict['data'].split(",")
+            self.msg_dict = json.loads(self.msg)
+            self.L = self.msg_dict['data'].split(",")
             telemData = telemetryDataStructure()
             telemData.assignValuefromList(self.L)
             telemData.printDataLog()
             self.assignClassVariableValues()
-            #self.printIncomingData()
 
 
     def printIncomingData(self):
@@ -459,11 +480,67 @@ class Ui_MainWindow(object):
             ret, self.cv_img = cap.read()
             self.qt_img = self.convert_cv_qt(self.cv_img, 791, 571)
             self.image_label.setPixmap(self.qt_img)
+
+    def getCameraUDP(self):
+        max_length = 65540
+        sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        sock.bind((self.IP_add, self.port1))
+        frame_info = None
+        buffer = None
+        frame = None
+        print("-> waiting for connection")
+        while True:
+            data, address = sock.recvfrom(max_length)
+            if len(data) < 100:
+                frame_info = pickle.loads(data)
+
+                if frame_info:
+                    nums_of_packs = frame_info["packs"]
+
+                    for i in range(nums_of_packs):
+                        data, address = sock.recvfrom(max_length)
+
+                        if i == 0:
+                            buffer = data
+                        else:
+                            buffer += data
+
+                    frame = np.frombuffer(buffer, dtype=np.uint8)
+                    frame = frame.reshape(frame.shape[0], 1)
+
+                    frame = cv2.imdecode(frame, cv2.IMREAD_COLOR)
+                    frame = cv2.flip(frame, 1)
+
+                    if frame is not None and type(frame) == np.ndarray:
+                        self.cv_img = frame
+                        self.qt_img = self.convert_cv_qt(self.cv_img, 791, 571)
+                        self.image_label.setPixmap(self.qt_img)
     
     def setAngleLabels(self):
-        self.qt_img_yaw = self.convert_cv_qt(self.arrow_img, 108, 129)
-        self.pitchDia_label.setPixmap(self.qt_img_yaw)
+        self.qt_img_map = self.convert_cv_qt(self.map_img, 601, 301)
+        self.map_label.setPixmap(self.qt_img_map)
     
+    def setMapLabel(self):
+        self.qt_img_map = self.convert_cv_qt(self.map_img, 601, 301)
+        self.map_label.setPixmap(self.qt_img_map)
+
+    def setSignalLabels(self):
+        transLabelList = [self.trans_lbl1,self.trans_lbl2,self.trans_lbl3,self.trans_lbl4]
+        recvLabelList = [self.trans_lbl1,self.trans_lbl2,self.trans_lbl3,self.trans_lbl4]
+        while True:
+            n_send = random.randint(0,5)
+            n_recv = random.randint(0,5)
+            for i in range(1,n_send):
+                n_send = random.randint(0,5)
+
+                transLabelList[i].setText("")
+                transLabelList[i].setStyleSheet("background-color: green")
+            for i in range(1,n_recv):
+                n_recv = random.randint(0,5)
+                recvLabelList[i].setText("")
+                recvLabelList[i].setStyleSheet("background-color: green")
+
+
     def exit_gui(self):
         self.th_setCameraImageLabel.join()
         self.th_setLabelValues.join()
